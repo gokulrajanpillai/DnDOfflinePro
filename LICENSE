@@ -1,2 +1,75 @@
-DnD Offline Pro © 2025 YOUR NAME
-Personal use only. No redistribution or resale.
+DnD Offline Pro © 2025 GOKUL RAJAN PILLAI
+
+Personal Use License Agreement
+1. Definitions
+
+1.1 Software means DnD Offline Pro and all included files such as source code, executables, scripts, configuration, prompts, model weights, tokenizers, assets, and documentation.
+1.2 Model Files means any machine learning models, weights, tokenizers, vocabularies, or related artifacts included with the Software.
+1.3 Device means a computer owned and controlled by the Licensee.
+1.4 Personal use means use by one natural person for private entertainment or learning, and not for any business, client work, classroom activity, research, publication, or public demonstration.
+
+2. Grant
+
+2.1 The Licensor grants the Licensee a limited, revocable, non exclusive, non transferable, and non sublicensable license to install and run the Software for Personal use only.
+2.2 The license is for a single natural person. The Software may be installed on up to two Devices owned and controlled by that person, but may not be used at the same time by more than that one person.
+
+3. Ownership
+
+3.1 The Software is licensed and not sold. All rights, title, and interest remain with the Licensor and its suppliers.
+3.2 No rights are granted by implication.
+
+4. Restrictions
+
+The Licensee shall not, and shall not permit any other person to:
+a) share, sell, rent, lend, publish, upload, post, mirror, or distribute the Software or any part of it, including the Model Files
+b) sublicense, assign, or transfer this license or any right under it
+c) make the Software available over a network where it could be used by more than one person at a time
+d) use the Software for any commercial purpose, client work, academic research, classroom use, public performance, streaming, or any paid or free public demonstration
+e) reverse engineer, decompile, disassemble, translate, or attempt to derive the source, structure, or weights of any component, except where this restriction is not allowed by applicable law and then only after giving the Licensor thirty days written notice
+f) extract, copy, convert, fine tune, distill, quantize, merge, or reuse the Model Files or any part of them in any other program or service
+g) use the Software or its outputs to create datasets or benchmarks or to train or evaluate any model without prior written consent from the Licensor
+h) remove or alter any notice of copyright, trademark, authorship, or license
+i) publish performance results, benchmarks, or comparisons without prior written consent from the Licensor
+j) circumvent or attempt to circumvent any technical protection, watermark, or license control
+
+5. Backups
+
+One backup copy is allowed for disaster recovery. The backup must not be shared or used by any person other than the Licensee.
+
+6. Updates and support
+
+The Licensor may provide updates at its sole discretion. Any update is subject to this Agreement. The Licensor has no duty to provide support, updates, or bug fixes.
+
+7. Verification
+
+Upon reasonable written request, the Licensee shall provide proof of purchase and reasonable information to verify compliance, such as the number of Devices where the Software is installed. The Software may display the Licensee name and an order identifier in its about screen or at start.
+
+8. Confidential components
+
+The Model Files and any unpublished prompts or configuration are confidential to the Licensor. The Licensee shall keep them confidential and use them only as allowed in this Agreement.
+
+9. Term and termination
+
+9.1 This Agreement starts on the date the Licensee first installs or uses the Software and continues until terminated.
+9.2 The Licensor may terminate this Agreement immediately if the Licensee breaches any term.
+9.3 Upon termination, the Licensee shall stop all use, delete all copies of the Software and the Model Files, and confirm deletion in writing within ten days. Sections 3, 4, 7, 8, 10, 11, 12, and 13 survive termination.
+
+10. No warranties
+
+The Software is provided as is and as available, with all faults. The Licensor disclaims all warranties, including implied warranties of merchantability, fitness for a particular purpose, and non infringement. The Licensee bears the entire risk of use.
+
+11. Limitation of liability
+
+To the maximum extent allowed by law, the Licensor will not be liable for any indirect, incidental, special, punitive, or consequential damages, or for lost profits, lost data, or business interruption, even if advised of the possibility of such damages. The Licensor total liability for any claim will not exceed the price paid for the license.
+
+12. Indemnity
+
+The Licensee shall indemnify and hold harmless the Licensor from claims arising out of the Licensee breach of this Agreement or misuse of the Software.
+
+13. Third party components
+
+Third party components, if any, are provided under their own licenses. If a third party license conflicts with this Agreement for that component, the third party license controls for that component only.
+
+14. Severability and entire agreement
+
+If any part of this Agreement is found unenforceable, the rest remains in effect. This Agreement is the entire agreement about the Software and replaces any prior understandings.
