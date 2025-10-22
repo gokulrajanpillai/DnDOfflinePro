@@ -1,6 +1,6 @@
 # DnD Offline Pro
 
-[![License: Personal Use Only](https://img.shields.io/badge/License-Personal%20Use-red.svg)](./LICENSE.txt)
+[![License: Personal Use Only](https://img.shields.io/badge/License-Personal%20Use-red.svg)](./LICENSE)
 
 
 > **Usage terms (Personal Use License)**
@@ -9,7 +9,7 @@
 > - No reverse engineering, model extraction, or benchmarking
 > - Commercial, classroom, or research use needs a separate license
 >
-> See the full [LICENSE.txt](./LICENSE.txt).
+> See the full [LICENSE](./LICENSE).
 
 ## License
 
@@ -17,4 +17,4 @@ This software is licensed for **Personal Use** only. The license grants a limite
 
 Commercial, classroom, or research use requires a separate written license.
 
-Read the complete terms in **[LICENSE.txt](./LICENSE.txt)**.
+Read the complete terms in **[LICENSE](./LICENSE)**.
