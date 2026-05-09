@@ -51,25 +51,53 @@ def get_pipeline():
     return _pipeline
 
 
-def build_system_rule(char_name: str, char_class: str) -> str:
+DEFAULT_HP = {
+    "Fighter": 14, "Paladin": 14,
+    "Ranger": 12,  "Cleric": 12,
+    "Bard": 10,    "Rogue": 10, "Druid": 10,
+    "Wizard": 8,
+}
+
+DIFFICULTY_RULES = {
+    "Easy":   "Success usually comes to the brave. Setbacks are minor and rarely fatal.",
+    "Normal": ("Success is never guaranteed — sometimes the player fails, slips, or is "
+               "surprised. Reference fortune in flavour only."),
+    "Hard":   ("The world is unforgiving. Actions frequently fail or backfire. "
+               "The player must be clever, cautious, and fortunate to survive."),
+}
+
+
+def build_system_rule(char_name: str, char_class: str,
+                      hp_current: int, hp_max: int, difficulty: str) -> str:
     name = char_name.strip() or "Adventurer"
     cls  = char_class if char_class in CHARACTER_CLASSES else "Fighter"
     desc = CHARACTER_CLASSES[cls]
+    diff_rule = DIFFICULTY_RULES.get(difficulty, DIFFICULTY_RULES["Normal"])
+
+    # HP state hint so the narrator can colour its language
+    wound = ""
+    if hp_max > 0:
+        ratio = hp_current / hp_max
+        if ratio <= 0.25:
+            wound = f" {name} is critically wounded (HP {hp_current}/{hp_max}) — narrate pain and desperation."
+        elif ratio <= 0.5:
+            wound = f" {name} is injured (HP {hp_current}/{hp_max}) — occasionally reference the hurt."
+
     return (
-        f"You are the Dungeon narrator for {name}, a {cls} — {desc}. "
-        f"Write one vivid paragraph of up to 180 words. "
+        f"You are the Dungeon narrator for {name}, a {cls} — {desc}.{wound} "
+        "Write one vivid paragraph of up to 180 words. "
         "Second person, fantasy tone, rich sensory detail, light wit, no modern slang. "
         f"Acknowledge {name}'s class abilities when contextually fitting. "
-        "Success is never guaranteed — sometimes the player fails, slips, or is surprised. "
-        "Reference fortune in flavour only ('luck turns against you', 'fortune smiles briefly'). "
+        f"{diff_rule} "
         "End with a hook — a question, a sound, a dying breath, a door opening — "
         "and vary the form and phrasing every single time, never repeating yourself."
     )
 
 
 def build_prompt(tokenizer, history: list, player_action: str,
-                 char_name: str, char_class: str) -> str:
-    system_rule = build_system_rule(char_name, char_class)
+                 char_name: str, char_class: str,
+                 hp_current: int, hp_max: int, difficulty: str) -> str:
+    system_rule = build_system_rule(char_name, char_class, hp_current, hp_max, difficulty)
     msgs = [{"role": "system", "content": system_rule}]
     assistant_turns = [m for m in history if m.get("role") == "assistant"][-3:]
     msgs.extend(assistant_turns)
@@ -86,25 +114,40 @@ def build_prompt(tokenizer, history: list, player_action: str,
     )
 
 
-def new_game(scenario_name: str, char_name: str, char_class: str):
+def new_game(scenario_name: str, char_name: str, char_class: str,
+             hp_max: int, difficulty: str):
     name    = char_name.strip() or "Adventurer"
+    cls     = char_class if char_class in CHARACTER_CLASSES else "Fighter"
+    hp_max  = int(hp_max) if hp_max else DEFAULT_HP.get(cls, 10)
     opening = SCENARIOS[scenario_name]
-    intro   = f"*{name} the {char_class} enters the story…*\n\n{opening}"
-    return [{"role": "assistant", "content": intro}], ""
+    intro   = (
+        f"*{name} the {cls} enters the story…*\n\n{opening}\n\n"
+        f"*HP: {hp_max}/{hp_max} · Difficulty: {difficulty}*"
+    )
+    return [{"role": "assistant", "content": intro}], "", hp_max, hp_max
 
 
 def respond(message: str, history: list, scenario_name: str,
-            char_name: str, char_class: str):
+            char_name: str, char_class: str,
+            hp_current: int, hp_max: int, difficulty: str):
     if not message.strip():
-        return history, ""
+        return history, "", hp_current
+
+    cls = char_class if char_class in CHARACTER_CLASSES else "Fighter"
+    hp_current = int(hp_current) if hp_current else DEFAULT_HP.get(cls, 10)
+    hp_max     = int(hp_max)     if hp_max     else DEFAULT_HP.get(cls, 10)
 
     if not history:
         opening = SCENARIOS[scenario_name]
-        name    = char_name.strip() or "Adventurer"
-        history = [{"role": "assistant", "content": f"*{name} the {char_class} enters the story…*\n\n{opening}"}]
+        name    = (char_name.strip() or "Adventurer")
+        history = [{"role": "assistant", "content": (
+            f"*{name} the {cls} enters the story…*\n\n{opening}\n\n"
+            f"*HP: {hp_current}/{hp_max} · Difficulty: {difficulty}*"
+        )}]
 
     gen    = get_pipeline()
-    prompt = build_prompt(gen.tokenizer, history, message, char_name, char_class)
+    prompt = build_prompt(gen.tokenizer, history, message,
+                          char_name, cls, hp_current, hp_max, difficulty)
 
     raw = gen(
         prompt,
@@ -128,7 +171,7 @@ def respond(message: str, history: list, scenario_name: str,
     if len(history) > 8:
         history = history[-8:]
 
-    return history, ""
+    return history, "", hp_current
 
 
 # ── Dark fantasy CSS ──────────────────────────────────────────────────────────
@@ -250,12 +293,26 @@ with gr.Blocks(theme=gr.themes.Base(), css=CUSTOM_CSS,
             label="Class",
             scale=2,
         )
+        hp_max_input = gr.Number(
+            label="Starting HP",
+            value=DEFAULT_HP["Fighter"],
+            minimum=1,
+            maximum=30,
+            step=1,
+            scale=1,
+        )
 
     with gr.Row():
         scenario_selector = gr.Radio(
             choices=list(SCENARIOS.keys()),
             value="Dungeon",
             label="Starting scenario",
+            interactive=True,
+        )
+        difficulty_selector = gr.Radio(
+            choices=["Easy", "Normal", "Hard"],
+            value="Normal",
+            label="Difficulty",
             interactive=True,
         )
         new_game_btn = gr.Button("Begin Adventure", variant="primary", scale=0)
@@ -269,6 +326,9 @@ with gr.Blocks(theme=gr.themes.Base(), css=CUSTOM_CSS,
         bubble_full_width=False,
     )
 
+    # Hidden state for current HP (updated per turn)
+    hp_current_state = gr.State(value=DEFAULT_HP["Fighter"])
+
     with gr.Row():
         action_input = gr.Textbox(
             placeholder="Speak your intent…",
@@ -280,21 +340,30 @@ with gr.Blocks(theme=gr.themes.Base(), css=CUSTOM_CSS,
 
     gr.Markdown(FOOTER)
 
+    # Auto-update default HP when class changes
+    def update_default_hp(char_class):
+        return DEFAULT_HP.get(char_class, 10)
+
+    char_class_input.change(update_default_hp, [char_class_input], [hp_max_input])
+
     # Wire events
     submit_btn.click(
         respond,
-        [action_input, chatbot, scenario_selector, char_name_input, char_class_input],
-        [chatbot, action_input],
+        [action_input, chatbot, scenario_selector, char_name_input,
+         char_class_input, hp_current_state, hp_max_input, difficulty_selector],
+        [chatbot, action_input, hp_current_state],
     )
     action_input.submit(
         respond,
-        [action_input, chatbot, scenario_selector, char_name_input, char_class_input],
-        [chatbot, action_input],
+        [action_input, chatbot, scenario_selector, char_name_input,
+         char_class_input, hp_current_state, hp_max_input, difficulty_selector],
+        [chatbot, action_input, hp_current_state],
     )
     new_game_btn.click(
         new_game,
-        [scenario_selector, char_name_input, char_class_input],
-        [chatbot, action_input],
+        [scenario_selector, char_name_input, char_class_input,
+         hp_max_input, difficulty_selector],
+        [chatbot, action_input, hp_current_state, hp_max_input],
     )
 
 
