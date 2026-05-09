@@ -11,12 +11,12 @@ __pycache__/
 # Virtual environments
 venv/
 env/
-.venv/
+.venv*/
 ENV/
 
 # Distribution / packaging
-build/
-dist/
+*.build/
+*.dist/
 *.egg-info/
 .eggs/
 
@@ -42,4 +42,12 @@ Thumbs.db
 # Environment variables / secrets
 .env
 .env.*
+
+# Compiled binaries and release artifacts (distributed via GitHub Releases)
+*.bin
+*.exe
+*.AppImage
+*.dmg
+dist/
+release/
 
