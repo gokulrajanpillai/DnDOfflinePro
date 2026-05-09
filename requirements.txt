@@ -1,5 +1,4 @@
 transformers==4.53.0
-torch==2.4.1
-transformers==4.45.2
 torch==2.8.0
 huggingface_hub==0.24.6
+rich>=13.0
