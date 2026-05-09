@@ -1,0 +1,61 @@
+name: Announce Release
+
+# Fires automatically when a release is published, or run manually.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g. 0.2.0)"
+        required: true
+      hf_url:
+        description: "HF Spaces URL"
+        required: true
+        default: "https://huggingface.co/spaces/gokulrajanpillai/DnDOfflinePro-Demo"
+      itch_url:
+        description: "itch.io page URL"
+        required: true
+        default: "https://gokulrajanpillai.itch.io/dnd-offline-pro"
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install praw
+
+      - name: Resolve inputs
+        # Use workflow_dispatch inputs if present; fall back to release tag values.
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}"          >> "$GITHUB_ENV"
+            echo "HF_URL=${{ github.event.inputs.hf_url }}"            >> "$GITHUB_ENV"
+            echo "ITCH_URL=${{ github.event.inputs.itch_url }}"        >> "$GITHUB_ENV"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+            echo "VERSION=$VERSION"                                                               >> "$GITHUB_ENV"
+            echo "HF_URL=https://huggingface.co/spaces/${{ vars.HF_USERNAME }}/DnDOfflinePro-Demo" >> "$GITHUB_ENV"
+            echo "ITCH_URL=https://${{ vars.ITCH_USER }}.itch.io/${{ vars.ITCH_GAME }}"           >> "$GITHUB_ENV"
+          fi
+
+      - name: Post announcements
+        env:
+          VERSION:               ${{ env.VERSION }}
+          HF_URL:                ${{ env.HF_URL }}
+          ITCH_URL:              ${{ env.ITCH_URL }}
+          # Optional — Reddit posts automatically only if all four are set.
+          # Leave unset to get formatted copy in the workflow summary instead.
+          REDDIT_CLIENT_ID:      ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET:  ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME:       ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD:       ${{ secrets.REDDIT_PASSWORD }}
+        run: python scripts/announce.py
