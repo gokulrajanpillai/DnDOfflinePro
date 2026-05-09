@@ -9,6 +9,7 @@ app_file: app.py
 pinned: false
 license: apache-2.0
 short_description: Fully offline AI dungeon master — web preview
+python_version: "3.12"
 ---
 
 # DnD Offline Pro — Web Demo

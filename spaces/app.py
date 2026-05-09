@@ -10,7 +10,9 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
 hf_logging.set_verbosity_error()
 
-MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
+# LOCAL_MODEL_PATH env var lets you point at an already-downloaded model for local dev.
+# Falls back to downloading from HF Hub when running in the cloud (HF Spaces).
+MODEL_SOURCE = os.environ.get("LOCAL_MODEL_PATH") or "Qwen/Qwen2.5-0.5B-Instruct"
 
 SHORT_RULE = (
     "You are the Dungeon narrator. Write one vivid paragraph under 110 words. "
@@ -40,8 +42,8 @@ _pipeline = None
 def get_pipeline():
     global _pipeline
     if _pipeline is None:
-        tok = AutoTokenizer.from_pretrained(MODEL_ID)
-        mdl = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+        tok = AutoTokenizer.from_pretrained(MODEL_SOURCE)
+        mdl = AutoModelForCausalLM.from_pretrained(MODEL_SOURCE)
         _pipeline = pipeline("text-generation", model=mdl, tokenizer=tok, device=-1)
     return _pipeline
 

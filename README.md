@@ -14,6 +14,9 @@ Every word of your adventure is generated on your machine — nothing leaves you
 ![Demo](assets/demo.gif)
 -->
 
+**[Try the web demo →](https://huggingface.co/spaces/gokulrajanpillai/DnDOfflinePro-Demo)**
+_(runs in browser — no install, no download)_
+
 ---
 
 ## Features
@@ -84,6 +87,25 @@ python src/dnd_offline.py --model models/qwen_2_5_1_5b_instruct
 | Qwen2.5-0.5B-Instruct (default) | ~1 GB | Good | 2 GB |
 | Qwen2.5-1.5B-Instruct | ~3 GB | Better | 4 GB |
 | TinyLlama-Chat | ~700 MB | Baseline | 2 GB |
+
+---
+
+## Web Demo (local)
+
+Run the browser UI against your already-downloaded model — no extra download needed:
+
+```bash
+pip install gradio
+LOCAL_MODEL_PATH=models/qwen2_5_0_5b_instruct python spaces/app.py
+# Open http://localhost:7860
+```
+
+Or let it pull the model from HF Hub on first run (requires internet, ~1 GB):
+
+```bash
+pip install gradio
+python spaces/app.py
+```
 
 ---
 
