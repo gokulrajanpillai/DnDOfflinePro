@@ -1,27 +1,44 @@
 name: Deploy to itch.io
 
-# Fires when a GitHub Release is published (not just drafted).
-# The release must have the binary ZIP attached as a release asset.
+# Fires on every push to main and when a release is published.
+# Builds a source ZIP from the repo and uploads it with butler.
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed for git describe
 
-      - name: Download release asset (binary ZIP)
+      - name: Determine version
+        id: ver
         run: |
-          mkdir -p release
-          gh release download "${{ github.ref_name }}" \
-            --pattern "*.zip" \
-            --dir release/
-        env:
-          GH_TOKEN: ${{ github.token }}
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$(git describe --tags --always --dirty)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build source ZIP
+        id: zip
+        run: |
+          ZIP_NAME="DnDOfflinePro-${{ steps.ver.outputs.value }}-source.zip"
+          git archive --format=zip \
+            --prefix=DnDOfflinePro/ \
+            HEAD \
+            -- src/ scenarios/ docs/ requirements.txt requirements-desktop.txt \
+               tools_fetch_model.py README.md LICENSE \
+            -o "$ZIP_NAME"
+          echo "name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
+          echo "Packaged: $ZIP_NAME ($(du -sh "$ZIP_NAME" | cut -f1))"
 
       - name: Install butler
         run: |
@@ -36,16 +53,14 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          ZIP=$(ls release/*.zip | head -1)
-          echo "Pushing $ZIP to itch.io..."
-          butler push "$ZIP" \
-            "${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:linux" \
-            --userversion "${{ env.VERSION }}"
+          butler push "${{ steps.zip.outputs.name }}" \
+            "${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:source" \
+            --userversion "${{ steps.ver.outputs.value }}"
 
       - name: Summary
         run: |
           echo "## itch.io deploy complete" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Version **${{ env.VERSION }}** pushed to \`${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:linux\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Version **${{ steps.ver.outputs.value }}** pushed to \`${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:source\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "View: https://${{ vars.ITCH_USER }}.itch.io/${{ vars.ITCH_GAME }}" >> "$GITHUB_STEP_SUMMARY"
