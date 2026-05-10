@@ -34,7 +34,7 @@ jobs:
           git archive --format=zip \
             --prefix=DnDOfflinePro/ \
             HEAD \
-            -- src/ scenarios/ docs/ requirements.txt requirements-desktop.txt \
+            -- src/ scenarios/ docs/ requirements.txt \
                tools_fetch_model.py README.md LICENSE \
             -o "$ZIP_NAME"
           echo "name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
