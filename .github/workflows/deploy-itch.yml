@@ -33,10 +33,10 @@ jobs:
           ZIP_NAME="DnDOfflinePro-${{ steps.ver.outputs.value }}-source.zip"
           git archive --format=zip \
             --prefix=DnDOfflinePro/ \
+            --output="$ZIP_NAME" \
             HEAD \
             -- src/ scenarios/ docs/ requirements.txt \
-               tools_fetch_model.py README.md LICENSE \
-            -o "$ZIP_NAME"
+               tools_fetch_model.py README.md LICENSE
           echo "name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
           echo "Packaged: $ZIP_NAME ($(du -sh "$ZIP_NAME" | cut -f1))"
 
