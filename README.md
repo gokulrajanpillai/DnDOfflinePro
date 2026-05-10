@@ -90,6 +90,20 @@ python src/dnd_offline.py --model models/qwen_2_5_1_5b_instruct
 
 ---
 
+## Desktop GUI (PyQt6)
+
+A full windowed app with a two-panel layout — story on the left, live character sheet on the right.
+
+```bash
+pip install -r requirements-desktop.txt
+python src/dnd_desktop.py
+# Optional flags:
+#   --model models/qwen2_5_1_5b_instruct
+#   --scenario tavern
+```
+
+---
+
 ## Web Demo (local)
 
 Run the browser UI against your already-downloaded model — no extra download needed:
@@ -113,11 +127,14 @@ python spaces/app.py
 
 ```
 DnDOfflinePro/
-├── src/dnd_offline.py      # Core game engine (Apache 2.0)
+├── src/dnd_offline.py      # Core CLI engine (Apache 2.0)
+├── src/dnd_desktop.py      # PyQt6 desktop GUI
+├── spaces/app.py           # Gradio web UI (HF Spaces / local)
 ├── scenarios/              # Community scenario templates
 ├── docs/                   # Setup guides
 ├── tools_fetch_model.py    # One-time model downloader
-├── requirements.txt
+├── requirements.txt        # CLI dependencies
+├── requirements-desktop.txt  # Desktop GUI (adds PyQt6)
 └── models/                 # Local model files (git-ignored)
 ```
 

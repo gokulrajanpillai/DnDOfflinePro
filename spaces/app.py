@@ -2,6 +2,50 @@ import os
 import textwrap
 import warnings
 
+# ── Patch gradio_client schema parser before importing gradio ─────────────────
+# pydantic generates `additionalProperties: False` (a boolean) inside the
+# Chatbot message schema.  gradio_client then passes that boolean down into
+# _json_schema_to_python_type → get_type, which does `if "const" in schema`
+# on a bool and raises TypeError.  We guard in three layers so at least one
+# catches it regardless of internal refactors across gradio_client versions.
+try:
+    import gradio_client.utils as _gcu
+
+    # Layer 1 — crash site: get_type receives a non-dict schema
+    _orig_get_type = _gcu.get_type
+
+    def _safe_get_type(schema):
+        if not isinstance(schema, dict):
+            return "Any"
+        return _orig_get_type(schema)
+
+    _gcu.get_type = _safe_get_type
+
+    # Layer 2 — recursive inner function: guard non-dict input before any logic
+    _orig_inner = _gcu._json_schema_to_python_type
+
+    def _safe_inner(schema, defs=None):
+        if not isinstance(schema, dict):
+            return "Any"
+        return _orig_inner(schema, defs)
+
+    _gcu._json_schema_to_python_type = _safe_inner
+
+    # Layer 3 — public entry point: catch any TypeError that still escapes
+    _orig_j2p = _gcu.json_schema_to_python_type
+
+    def _safe_j2p(schema, defs=None):
+        try:
+            return _orig_j2p(schema)
+        except TypeError:
+            return "Any"
+
+    _gcu.json_schema_to_python_type = _safe_j2p
+
+except Exception:
+    pass
+# ─────────────────────────────────────────────────────────────────────────────
+
 import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from transformers.utils import logging as hf_logging
@@ -293,7 +337,7 @@ with gr.Blocks(theme=gr.themes.Base(), css=CUSTOM_CSS,
             label="Class",
             scale=2,
         )
-        hp_max_input = gr.Number(
+        hp_max_input = gr.Slider(
             label="Starting HP",
             value=DEFAULT_HP["Fighter"],
             minimum=1,
@@ -368,4 +412,4 @@ with gr.Blocks(theme=gr.themes.Base(), css=CUSTOM_CSS,
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", ssr_mode=False)

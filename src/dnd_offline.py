@@ -22,6 +22,7 @@ hf_logging.set_verbosity_error()
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 from rich.console import Console
+from rich.layout import Layout
 from rich.panel import Panel
 from rich.text import Text
 from rich.rule import Rule
@@ -103,6 +104,80 @@ def hp_bar(current: int, maximum: int, width: int = 16) -> Text:
     bar.append("░" * (width - filled), style=DIM)
     bar.append(f" {current}/{maximum}", style=CREAM)
     return bar
+
+
+def render_character_panel(character: dict, turn: int, elapsed: str) -> Panel:
+    t = Text()
+    name = character.get("name", "Adventurer")
+    cls  = character.get("class", "Fighter")
+    t.append(f"{name.upper()}\n", style=f"bold {GOLD}")
+    t.append(f"{cls}\n\n", style=f"italic {CREAM}")
+
+    hp_c = character.get("hp_current", "?")
+    hp_m = character.get("hp_max", "?")
+    t.append("HP  ", style=f"bold {CREAM}")
+    if isinstance(hp_c, int) and isinstance(hp_m, int):
+        t.append_text(hp_bar(hp_c, hp_m, width=10))
+    else:
+        t.append(f"{hp_c}/{hp_m}", style=CREAM)
+
+    diff = character.get("difficulty", "normal")
+    t.append(f"\n\n{diff.capitalize()}  ·  T{turn}\n", style=f"dim {CREAM}")
+    t.append(f"{elapsed}\n", style=f"dim {CREAM}")
+
+    inv = character.get("inventory", [])
+    t.append("\n── ITEMS\n", style=f"bold {GOLD}")
+    if inv:
+        for item in inv[:5]:
+            t.append(f"  {item}\n", style=CREAM)
+        if len(inv) > 5:
+            t.append(f"  +{len(inv) - 5} more\n", style=DIM)
+    else:
+        t.append("  empty\n", style=DIM)
+
+    fx = character.get("effects", [])
+    if fx:
+        t.append("\n── EFFECTS\n", style=f"bold {GOLD}")
+        for e in fx:
+            t.append(f"  {e}\n", style=RED)
+
+    return Panel(t, border_style=GOLD, padding=(0, 1))
+
+
+def show_narrator_turn(
+    text: str, character: dict, turn: int, session_start: float, delay: float = 0.013
+):
+    elapsed = format_duration(time.time() - session_start)
+
+    if console.width < 80:
+        typewriter(text, delay)
+        return
+
+    layout = Layout()
+    layout.split_row(
+        Layout(name="story", ratio=3),
+        Layout(name="sheet", minimum_size=24, ratio=1),
+    )
+    layout["sheet"].update(render_character_panel(character, turn, elapsed))
+
+    displayed = Text(style=CREAM)
+    with Live(layout, console=console, refresh_per_second=60) as live:
+        for ch in text:
+            displayed.append(ch)
+            layout["story"].update(
+                Panel(
+                    displayed,
+                    title=f"[{GOLD}]The Chronicle[/{GOLD}]",
+                    border_style=GOLD,
+                    padding=(1, 2),
+                )
+            )
+            live.refresh()
+            try:
+                time.sleep(delay)
+            except KeyboardInterrupt:
+                break
+    console.print()
 
 
 def normalize_character(c: dict) -> dict:
@@ -577,33 +652,21 @@ def main():
         sys.exit(1)
 
     # Opening scene
+    session_start = time.time()
+    turn = 0
+
     opening = resolve_opening(args.scenario)
     if args.load and history:
         last = next((m["content"] for m in reversed(history)
                      if m.get("role") == "assistant"), opening)
-        typewriter(last)
+        show_narrator_turn(last, character, turn, session_start)
     else:
         history.append({"role": "assistant", "content": opening})
-        typewriter(opening)
-
-    session_start = time.time()
-    turn = 0
+        show_narrator_turn(opening, character, turn, session_start)
 
     try:
         while True:
             console.rule(style=f"dim {BORDER}")
-
-            # HUD line
-            hp_c    = character.get("hp_current", "?")
-            hp_m    = character.get("hp_max", "?")
-            elapsed = format_duration(time.time() - session_start)
-            console.print(
-                f"[bold {GOLD}]{character['name']}[/bold {GOLD}] "
-                f"[{DIM}]({character['class']} · "
-                f"HP {hp_c}/{hp_m} · "
-                f"T{turn + 1} · {elapsed})[/{DIM}]"
-            )
-
             action = Prompt.ask(f"[{CREAM}]>[/{CREAM}]")
 
             if action.lower() in ("exit", "quit"):
@@ -647,7 +710,7 @@ def main():
                 )[0]["generated_text"].strip()
 
             console.print()
-            typewriter(out)
+            show_narrator_turn(out, character, turn + 1, session_start)
 
             history.append({"role": "user",      "content": action})
             history.append({"role": "assistant",  "content": out})
