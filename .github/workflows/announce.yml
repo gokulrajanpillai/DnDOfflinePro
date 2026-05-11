@@ -1,6 +1,9 @@
 name: Announce Release
 
 # Fires automatically when a release is published, or run manually.
+# Generates ready-to-post copy for: HN · Product Hunt · Reddit (r/LocalLLaMA,
+# r/DnD, r/rpg, r/SideProject).  Reddit posts automatically when credentials
+# are set; all others appear as copy/paste templates in the workflow summary.
 on:
   release:
     types: [published]

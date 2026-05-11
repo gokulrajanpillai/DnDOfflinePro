@@ -42,9 +42,16 @@ jobs:
 
       - name: Install butler
         run: |
-          curl -fsSL -L -o butler.zip \
+          curl -fsSL -L -o butler-dl \
             "https://github.com/itchio/butler/releases/latest/download/butler-linux-amd64.zip"
-          unzip -q butler.zip
+          # Releases ship either as a zip or a raw binary — handle both
+          if unzip -t butler-dl &>/dev/null; then
+            unzip -q butler-dl
+            # Inside the zip the binary may be named butler or butler-linux-amd64
+            [ -f butler ] || mv butler-linux-amd64 butler
+          else
+            mv butler-dl butler
+          fi
           chmod +x butler
           echo "$PWD" >> "$GITHUB_PATH"
           ./butler -V
