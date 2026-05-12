@@ -44,11 +44,10 @@ jobs:
         run: |
           curl -fsSL -L -o butler-dl \
             "https://github.com/itchio/butler/releases/latest/download/butler-linux-amd64.zip"
-          # Releases ship either as a zip or a raw binary — handle both
           if unzip -t butler-dl &>/dev/null; then
-            unzip -q butler-dl
-            # Inside the zip the binary may be named butler or butler-linux-amd64
-            [ -f butler ] || mv butler-linux-amd64 butler
+            unzip -q -o butler-dl -d butler-dir
+            BUTLER_BIN=$(find butler-dir -type f | head -1)
+            mv "$BUTLER_BIN" butler
           else
             mv butler-dl butler
           fi
